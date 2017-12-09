@@ -10,10 +10,28 @@ before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install ant; fi
 
 before_script:
- - git clone https://bitbucket.org/chromiumembedded/java-cef.git src
- - cd src && mkdir jcef_build && cd jcef_build
+  - git clone https://bitbucket.org/chromiumembedded/java-cef.git src
+  - cd src && mkdir jcef_build && cd jcef_build
 
 script:
- - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release .. ; fi
- - if [[ "$TRAVIS_OS_NAME" != "linux" ]]; then cmake -G "Unix Makefiles" -DPROJECT_ARCH="x86_64" -DCMAKE_BUILD_TYPE=Release .. ; fi
- - make -j4
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release .. ; fi
+  - if [[ "$TRAVIS_OS_NAME" != "linux" ]]; then cmake -G "Unix Makefiles" -DPROJECT_ARCH="x86_64" -DCMAKE_BUILD_TYPE=Release .. ; fi
+  - make -j4
+
+before_deploy:
+  - zip -r dist/java-cef-native.zip jcef_build/native/Release/
+  - git config --global user.email "builds@travis-ci.com"
+  - git config --global user.name "Travis CI"
+  - export GIT_TAG=build@${TRAVIS_BRANCH}#${TRAVIS_BUILD_NUMBER}
+  - git tag ${GIT_TAG} -a -m "Generated tag from TravisCI build ${TRAVIS_BUILD_NUMBER}"
+  - git push --quiet https://${GITHUB_TOKEN}@github.com/Team-Fruit/FactorioForge ${GIT_TAG} > /dev/null 2>&1
+deploy:
+  provider: releases
+  prerelease: true
+  api_key: ${GITHUB_TOKEN}
+  file: dist/java-cef-native-${TRAVIS_OS_NAME}.zip
+  skip_cleanup: true
+  on:
+    tags: false
+    all_branches: true
+    condition: '! "$TRAVIS_BRANCH" =~ ^(dev\\-|feature\\/).*$'
