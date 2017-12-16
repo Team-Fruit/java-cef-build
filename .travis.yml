@@ -20,7 +20,7 @@ before_script:
 
 script:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release .. ; fi
-  - if [[ "$TRAVIS_OS_NAME" != "linux" ]]; then cmake -G "Unix Makefiles" -DPROJECT_ARCH="x86_64" -DCMAKE_BUILD_TYPE=Release .. ; fi
+  - if [[ "$TRAVIS_OS_NAME" != "linux" ]]; then cmake -G "Xcode" -DPROJECT_ARCH="x86_64" -DCMAKE_BUILD_TYPE=Release .. ; fi
   - echo \ >> ../native/CefFrame_N.cpp
   - make -j4
 
