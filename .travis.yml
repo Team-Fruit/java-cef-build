@@ -1,4 +1,4 @@
-language: java
+language: cpp
 
 branches:
   except:
@@ -10,13 +10,9 @@ matrix:
       dist: trusty
     - os: osx
 
-addons:
-  apt:
-    packages:
-      - oracle-java8-installer
-
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install ant; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then bash install-osx-jdk8.sh; fi
 
 before_script:
   - mkdir jcef && cd jcef
