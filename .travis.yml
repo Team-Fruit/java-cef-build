@@ -52,3 +52,6 @@ deploy:
     tags: false
     all_branches: true
     condition: '! "$TRAVIS_BRANCH" =~ ^(dev\\-|feature\\/).*$'
+
+notifications:
+  email: false
