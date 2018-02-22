@@ -28,8 +28,12 @@ before_script:
   - cd $TRAVIS_BUILD_DIR/java-cef/src
   - mkdir jcef_build
   - cd jcef_build
-  - if [[ "$TARGET" == "linux32" ]]; then cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release .. ; fi
-  - if [[ "$TARGET" != "linux32" ]]; then cmake -G "Unix Makefiles" -DPROJECT_ARCH="x86_64" -DCMAKE_BUILD_TYPE=Release .. ; fi
+  - |
+    if [[ "$TARGET" == "linux32" ]]; then
+      cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release ..
+    else
+      cmake -G "Unix Makefiles" -DPROJECT_ARCH="x86_64" -DCMAKE_BUILD_TYPE=Release ..
+    fi
   - echo "Building the JCEF Java classes..."
   - cd $TRAVIS_BUILD_DIR/java-cef/src/tools
   - bash compile.sh $TARGET
@@ -44,7 +48,7 @@ before_deploy:
   - cd $TRAVIS_BUILD_DIR/java-cef/src/tools
   - bash make_distrib.sh $TARGET
   - cd $TRAVIS_BUILD_DIR/java-cef/src/binary_distrib
-  - 7z a jcef-${TARGET}-distribution.zip $TARGET
+  - zip -r jcef-${TARGET}-distribution.zip $TARGET
   - |
     git config --global user.email "builds@travis-ci.com"
     git config --global user.name "Travis CI"
