@@ -8,12 +8,12 @@ matrix:
   include:
     - os: linux
       dist: trusty
-      env: PROJECT_ARCH=32
+      env: TARGET=linux32
     - os: linux
       dist: trusty
-      env: PROJECT_ARCH=64
+      env: TARGET=linux64
     - os: osx
-      env: PROJECT_ARCH=64
+      env: TARGET=macosx64
 
 before_install:
   - |
@@ -23,22 +23,28 @@ before_install:
     fi
 
 before_script:
-  - mkdir jcef && cd jcef
-  - git clone https://bitbucket.org/chromiumembedded/java-cef.git src
-  - cd src && mkdir jcef_build && cd jcef_build
+  - git clone --depth=1 https://bitbucket.org/chromiumembedded/java-cef.git $TRAVIS_BUILD_DIR/java-cef/src
+  - echo "Running cmake..."
+  - cd $TRAVIS_BUILD_DIR/java-cef/src
+  - mkdir jcef_build
+  - cd jcef_build
+  - if [[ "$TARGET" == "linux32" ]]; then cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release .. ; fi
+  - if [[ "$TARGET" != "linux32" ]]; then cmake -G "Unix Makefiles" -DPROJECT_ARCH="x86_64" -DCMAKE_BUILD_TYPE=Release .. ; fi
 
 script:
-  - if [[ "$PROJECT_ARCH" != "64" ]]; then cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release .. ; fi
-  - if [[ "$PROJECT_ARCH" == "64" ]]; then cmake -G "Unix Makefiles" -DPROJECT_ARCH="x86_64" -DCMAKE_BUILD_TYPE=Release .. ; fi
-  - echo \ >> ../native/CefFrame_N.cpp
+  - echo \ >> $TRAVIS_BUILD_DIR/java-cef/src/native/CefFrame_N.cpp
   - make -j4
 
 before_deploy:
-  - cd native/Release/ && zip -r ../../../../java-cef-native-${TRAVIS_OS_NAME}-${PROJECT_ARCH}.zip ./ && cd ../../../../
+  - echo "Making distribution..."
+  - cd $TRAVIS_BUILD_DIR/java-cef/src/tools
+  - bash make_distrib.sh $TARGET
+  - cd $TRAVIS_BUILD_DIR/java-cef/src/binary_distrib
+  - 7z a jcef-${TARGET}-distribution.zip $TARGET
   - |
     git config --global user.email "builds@travis-ci.com"
     git config --global user.name "Travis CI"
-    export GIT_TAG=build@${TRAVIS_BRANCH}#${TRAVIS_BUILD_NUMBER}
+    export GIT_TAG=build-travis@${TRAVIS_BRANCH}#${TRAVIS_BUILD_NUMBER}
     git tag ${GIT_TAG} -a -m "Generated tag from TravisCI build ${TRAVIS_BUILD_NUMBER}"
     git push --quiet https://${GITHUB_TOKEN}@github.com/Team-Fruit/java-cef-build ${GIT_TAG} > /dev/null 2>&1 || true
 
@@ -46,7 +52,7 @@ deploy:
   provider: releases
   prerelease: true
   api_key: ${GITHUB_TOKEN}
-  file: java-cef-native-${TRAVIS_OS_NAME}-${PROJECT_ARCH}.zip
+  file: $TRAVIS_BUILD_DIR/java-cef/src/binary_distrib/jcef-${TARGET}-distribution.zip
   skip_cleanup: true
   on:
     tags: false
