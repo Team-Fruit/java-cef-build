@@ -30,9 +30,13 @@ before_script:
   - cd jcef_build
   - if [[ "$TARGET" == "linux32" ]]; then cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release .. ; fi
   - if [[ "$TARGET" != "linux32" ]]; then cmake -G "Unix Makefiles" -DPROJECT_ARCH="x86_64" -DCMAKE_BUILD_TYPE=Release .. ; fi
+  - echo "Building the JCEF Java classes..."
+  - cd $TRAVIS_BUILD_DIR/java-cef/src/tools
+  - bash compile.sh $TARGET
 
 script:
   - echo \ >> $TRAVIS_BUILD_DIR/java-cef/src/native/CefFrame_N.cpp
+  - cd $TRAVIS_BUILD_DIR/java-cef/src/jcef_build
   - make -j4
 
 before_deploy:
